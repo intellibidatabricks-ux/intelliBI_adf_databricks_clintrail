@@ -217,6 +217,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
+								"storedProcedureName": "[edcsrcmetadata].[usp_UpdateMxWatermark]",
 								"storedProcedureParameters": {
 									"MetadataId": {
 										"value": {
@@ -233,20 +234,21 @@
 										"type": "DateTime"
 									}
 								}
-							}
-						},
-						{
-							"name": "Stored procedureUpdtMxModifiedDate",
-							"type": "SqlServerStoredProcedure",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 3,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
 							},
-							"userProperties": []
+							"linkedServiceName": {
+								"referenceName": "ls_sqlserver_param",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pLsServerName": {
+										"value": "@item().SrcServerName",
+										"type": "Expression"
+									},
+									"pLsDatabasename": {
+										"value": "@item().SrcDatabaseName",
+										"type": "Expression"
+									}
+								}
+							}
 						}
 					]
 				}
