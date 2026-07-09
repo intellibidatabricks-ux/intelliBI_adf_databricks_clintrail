@@ -246,11 +246,7 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
-							"userProperties": [],
-							"linkedServiceName": {
-								"referenceName": "ls_sqlserver_param",
-								"type": "LinkedServiceReference"
-							}
+							"userProperties": []
 						}
 					]
 				}
