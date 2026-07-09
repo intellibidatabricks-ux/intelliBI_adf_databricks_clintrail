@@ -104,8 +104,57 @@
 										"type": "ParquetWriteSettings"
 									}
 								},
-								"enableStaging": false
-							}
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_sqlserver_source_tables_param",
+									"type": "DatasetReference",
+									"parameters": {
+										"pDsServerName": {
+											"value": "@item().SrcServerName",
+											"type": "Expression"
+										},
+										"pDsDatabasename": {
+											"value": "@item().SrcDatabaseName",
+											"type": "Expression"
+										},
+										"pDsSchemaName": {
+											"value": "@item().SrcSchemaName",
+											"type": "Expression"
+										},
+										"pDsTableName": {
+											"value": "@item().SrcTableName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_adls_landing_parquet_param",
+									"type": "DatasetReference",
+									"parameters": {
+										"pDsFileName": {
+											"value": "@{concat(item().SrcTableName, '_', formatDateTime(utcNow(),'yyyyMMddHHmmss'), '.parquet')}",
+											"type": "Expression"
+										},
+										"pDsFolderName": "@{concat(item().SrcSchemaName,'/',item().SrcTableName,'/ingest_date=',formatDateTime(utcNow(),'yyyy-MM-dd'))}",
+										"pDsContainerName": {
+											"value": "@item().LandingContainerName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
 						},
 						{
 							"name": "LookupGetMaxMetaData",
@@ -135,6 +184,16 @@
 									},
 									"queryTimeout": "02:00:00",
 									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "ds_sqlserver_source_tables_param",
+									"type": "DatasetReference",
+									"parameters": {
+										"pDsServerName": "localhost\\SQLEXPRESS",
+										"pDsDatabasename": "dev_clintrail_edc_src",
+										"pDsSchemaName": "edcsrcmetadata",
+										"pDsTableName": "srcEdcClintrailToLandControl"
+									}
 								}
 							}
 						},
@@ -158,7 +217,6 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"storedProcedureName": "[edcsrcmetadata].[usp_UpdateMxWatermark]",
 								"storedProcedureParameters": {
 									"MetadataId": {
 										"value": {
@@ -175,7 +233,20 @@
 										"type": "DateTime"
 									}
 								}
+							}
+						},
+						{
+							"name": "Stored procedureUpdtMxModifiedDate",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 3,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
 							},
+							"userProperties": [],
 							"linkedServiceName": {
 								"referenceName": "ls_sqlserver_param",
 								"type": "LinkedServiceReference"
