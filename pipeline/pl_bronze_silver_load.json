@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup1",
+				"name": "Lookup_bronze_silver",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -17,6 +17,10 @@
 				"typeProperties": {
 					"source": {
 						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "@concat('SELECT * FROM [', pipeline().parameters.pPlSchemaName,\n        '].[', pipeline().parameters.pPlpTableName,\n        '] WHERE Enabled = ''True''')",
+							"type": "Expression"
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -24,28 +28,64 @@
 						"referenceName": "ds_sqlserver_source_tables_param",
 						"type": "DatasetReference",
 						"parameters": {
-							"pDsServerName": "localhost\\SQLEXPRESS",
-							"pDsDatabasename": "dev_clintrail_edc_src",
-							"pDsSchemaName": "edcsrcmetadata",
-							"pDsTableName": "srcEdcBronzeToSilverControl"
+							"pDsServerName": {
+								"value": "@pipeline().parameters.pPlServerName",
+								"type": "Expression"
+							},
+							"pDsDatabasename": {
+								"value": "@pipeline().parameters.pPlDatabasename",
+								"type": "Expression"
+							},
+							"pDsSchemaName": {
+								"value": "@pipeline().parameters.pPlSchemaName",
+								"type": "Expression"
+							},
+							"pDsTableName": {
+								"value": "@pipeline().parameters.pPlpTableName",
+								"type": "Expression"
+							}
 						}
-					}
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
-				"name": "ForEach1",
+				"name": "ForEach_bronze_silver",
 				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
-						"activity": "Lookup1",
+						"activity": "Lookup_bronze_silver",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					}
 				],
-				"userProperties": []
+				"userProperties": [],
+				"typeProperties": {
+					"isSequential": true
+				}
 			}
 		],
+		"parameters": {
+			"pPlServerName": {
+				"type": "string",
+				"defaultValue": "localhost\\SQLEXPRESS"
+			},
+			"pPlDatabasename": {
+				"type": "string",
+				"defaultValue": "dev_clintrail_edc_src"
+			},
+			"pPlSchemaName": {
+				"type": "string",
+				"defaultValue": "edcsrcmetadata"
+			},
+			"pPlpTableName": {
+				"type": "string",
+				"defaultValue": "srcEdcBronzeToSilverControl"
+			}
+		},
 		"folder": {
 			"name": "dev_clintrail/bronze_silver_load"
 		},
