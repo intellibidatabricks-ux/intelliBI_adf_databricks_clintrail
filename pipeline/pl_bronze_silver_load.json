@@ -1,0 +1,54 @@
+{
+	"name": "pl_bronze_silver_load",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_sqlserver_source_tables_param",
+						"type": "DatasetReference",
+						"parameters": {
+							"pDsServerName": "localhost\\SQLEXPRESS",
+							"pDsDatabasename": "dev_clintrail_edc_src",
+							"pDsSchemaName": "edcsrcmetadata",
+							"pDsTableName": "srcEdcBronzeToSilverControl"
+						}
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": []
+			}
+		],
+		"folder": {
+			"name": "dev_clintrail/bronze_silver_load"
+		},
+		"annotations": []
+	}
+}
