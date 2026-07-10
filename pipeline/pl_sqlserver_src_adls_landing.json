@@ -277,7 +277,7 @@
 			}
 		},
 		"folder": {
-			"name": "dev_clintrail/SQLServerSrc_ADLSGen2Landing"
+			"name": "dev_clintrail/source_landing_load"
 		},
 		"annotations": []
 	}
