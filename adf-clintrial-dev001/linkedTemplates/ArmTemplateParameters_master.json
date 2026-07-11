@@ -1,0 +1,36 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-clintrial-dev001"
+		},
+		"ls_adls_clintrail_dev_accountKey": {
+			"value": ""
+		},
+		"ls_adls_clintrail_dev_properties_typeProperties_url": {
+			"value": "https://stclintraildev001.dfs.core.windows.net/"
+		},
+		"ls_azure_databricks_properties_typeProperties_existingClusterId": {
+			"value": "0709-084254-b6vs5dp7"
+		},
+		"ls_azure_key_vault_secrets_properties_typeProperties_baseUrl": {
+			"value": "https://kv-azure-keyvault-secret.vault.azure.net/"
+		},
+		"ls_sqlserver_param_properties_typeProperties_server": {
+			"value": "@{linkedService().pLsServerName}"
+		},
+		"ls_sqlserver_param_properties_typeProperties_database": {
+			"value": "@{linkedService().pLsDatabasename}"
+		},
+		"ls_sqlserver_param_properties_typeProperties_userName": {
+			"value": "adf_login"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
