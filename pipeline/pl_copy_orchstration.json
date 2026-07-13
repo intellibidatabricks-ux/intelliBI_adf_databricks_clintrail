@@ -34,6 +34,10 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_copy_2",
+						"type": "PipelineReference"
+					},
 					"waitOnCompletion": true
 				}
 			}
