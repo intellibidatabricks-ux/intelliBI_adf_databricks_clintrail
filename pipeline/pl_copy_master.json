@@ -19,7 +19,7 @@
 				}
 			},
 			{
-				"name": "Web1",
+				"name": "Web_Failed",
 				"type": "WebActivity",
 				"dependsOn": [
 					{
@@ -41,7 +41,35 @@
 					"method": "POST",
 					"url": "https://prod-27.centralindia.logic.azure.com:443/workflows/50d8f9c820984ba3ac5b881f5d8d8349/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=VSXi5VKcWalgzwC8T51Y9tyTojUc4vJQ9eaDXQE4tfA",
 					"body": {
-						"value": "{\n    \"PipleName\" : \"@{pipeline().Pipeline}\",\n    \"ErrorMessage\" : \"@{pipeline().Pipeline}.Error.Message\"\n}",
+						"value": "{\n    \"Status\" : \"Failed\",\n    \"PipleName\" : \"@{pipeline().Pipeline}\",\n    \"ErrorMessage\" : \"@{pipeline().Pipeline}.Error.Message\"\n}",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Web_Success",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "pl_copy_orchstration",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": "https://prod-27.centralindia.logic.azure.com:443/workflows/50d8f9c820984ba3ac5b881f5d8d8349/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=VSXi5VKcWalgzwC8T51Y9tyTojUc4vJQ9eaDXQE4tfA",
+					"body": {
+						"value": "{\n    \"Status\" : \"Succeeded\",\n    \"PipleName\" : \"@{pipeline().Pipeline}\",\n    \"StartTime\" : \"@{pipeline().TriggerTime}\",\n    \"EndTime\" : \"@{utcNow()}\",\n}",
 						"type": "Expression"
 					}
 				}
