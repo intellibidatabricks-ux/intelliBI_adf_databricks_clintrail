@@ -5,7 +5,14 @@
 			{
 				"name": "Execute Pipeline1",
 				"type": "ExecutePipeline",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"secureInput": false
 				},
@@ -19,33 +26,23 @@
 				}
 			},
 			{
-				"name": "Web_Success_Post",
-				"type": "WebActivity",
-				"dependsOn": [
-					{
-						"activity": "Execute Pipeline1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"name": "Execute Pipeline2",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
 				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
 					"secureInput": false
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"method": "POST",
-					"body": {
-						"value": "{\n  \"PipelineName\": \"@{pipeline().Pipeline}\",\n  \"PipelineRunID\": \"@{pipeline().RunId}\",\n  \"FailedActivity\": \"pl_src_landing_load\",\n  \"ErrorMessage\": \"@{activity('Execute Pipeline1').Error.Message}\"\n}",
-						"type": "Expression"
-					}
+					"waitOnCompletion": true
 				}
 			}
 		],
+		"variables": {
+			"pErrorMsg": {
+				"type": "String"
+			}
+		},
 		"folder": {
 			"name": "dev_clintrail/EmailTest"
 		},
