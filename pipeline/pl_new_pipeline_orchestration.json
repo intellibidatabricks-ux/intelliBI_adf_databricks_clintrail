@@ -40,7 +40,7 @@
 				"typeProperties": {
 					"method": "POST",
 					"body": {
-						"value": "{\n  \"pipelineName\": \"pl_new_pipeline_orchestration\",\n  \"errorMessage\": \"@{activity('pl_new_pipeline_orchestration').Error.message}\",\n  \"runUrl\":       \"https://adf.azure.com/monitoring/pipelineruns/@{pipeline().RunId}\"\n}\n\n\n\n\npl_new_pipeline_orchestration",
+						"value": "{\n  \"pipelineName\": \"pl_new_pipeline_orchestration\",\n  \"errorMessage\": \"@{activity('pl_new_pipeline_orchestration').Error.message}\",\n  \"runUrl\": \"https://adf.azure.com/monitoring/pipelineruns\"\n}",
 						"type": "Expression"
 					}
 				}
