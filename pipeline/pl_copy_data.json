@@ -23,7 +23,8 @@
 					"sink": {
 						"type": "SqlServerSink",
 						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate"
 					},
 					"enableStaging": false,
 					"translator": {
@@ -55,7 +56,7 @@
 							"pDsServerName": "localhost\\SQLEXPRESS",
 							"pDsDatabasename": "dev_clintrail_edc_src",
 							"pDsSchemaName": "src",
-							"pDsTableName": "dm"
+							"pDsTableName": "dmmm3"
 						}
 					}
 				]
