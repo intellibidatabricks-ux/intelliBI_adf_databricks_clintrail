@@ -1641,18 +1641,11 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "Stopped",
 				"pipelines": [
 					{
 						"pipelineReference": {
 							"referenceName": "pl_clintrail_master_orchestration",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					},
-					{
-						"pipelineReference": {
-							"referenceName": "pl_copy_master_orchestration",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -1670,9 +1663,31 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_clintrail_master_orchestration')]",
-				"[concat(variables('factoryId'), '/pipelines/pl_copy_master_orchestration')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_clintrail_master_orchestration')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tr_tumbling')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"type": "TumblingWindowTrigger",
+				"typeProperties": {
+					"frequency": "Hour",
+					"interval": 15,
+					"startTime": "2026-07-14T05:00:00Z",
+					"endTime": "2026-07-14T05:30:00Z",
+					"delay": "00:00:00",
+					"maxConcurrency": 50,
+					"retryPolicy": {
+						"intervalInSeconds": 30
+					},
+					"dependsOn": []
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/shir-local-computer')]",
