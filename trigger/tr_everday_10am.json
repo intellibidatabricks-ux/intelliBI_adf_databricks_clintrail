@@ -1,0 +1,25 @@
+{
+	"name": "tr_everday_10am",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_clintrail_master_orchestration",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 5,
+				"startTime": "2026-07-14T03:35:00",
+				"endTime": "2026-07-15T08:44:00",
+				"timeZone": "India Standard Time"
+			}
+		}
+	}
+}
