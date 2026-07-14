@@ -9,12 +9,6 @@
 					"referenceName": "pl_clintrail_master_orchestration",
 					"type": "PipelineReference"
 				}
-			},
-			{
-				"pipelineReference": {
-					"referenceName": "pl_copy_master_orchestration",
-					"type": "PipelineReference"
-				}
 			}
 		],
 		"type": "ScheduleTrigger",
