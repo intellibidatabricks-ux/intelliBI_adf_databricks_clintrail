@@ -43,7 +43,7 @@
 					"method": "POST",
 					"url": "https://prod-12.centralindia.logic.azure.com:443/workflows/505daf2d56ae44a2b994ce0f33e0f440/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=81hh1qYk0w1bh_-6cJB2jacbAbll6z3sVHHrpR0EDUg",
 					"body": {
-						"value": "{\n    \"Status\" \"Failed\",\n    \"PipeLineName\" : \"@{pipeline().Pipeline}\",\n    \"ErrorMsg\" : \"@{activity('Execute Pipeline_copy_data').Error.Message}\n}",
+						"value": "{\n    \"Status\" : \"Failed\",\n    \"PipeLineName\" : \"@{pipeline().Pipeline}\",\n    \"ErrorMsg\" : \"@{activity('Execute Pipeline_copy_data').Error.Message}\n}",
 						"type": "Expression"
 					}
 				}
@@ -71,7 +71,7 @@
 					"method": "POST",
 					"url": "https://prod-12.centralindia.logic.azure.com:443/workflows/505daf2d56ae44a2b994ce0f33e0f440/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=81hh1qYk0w1bh_-6cJB2jacbAbll6z3sVHHrpR0EDUg",
 					"body": {
-						"value": "{\n    \"Status\" \"Success\",\n    \"PipeLineName\" : \"@{pipeline().Pipeline}\",\n    \"StartTime\" : \"@{pipeline().TriggerTime}\",\n    \"EndTime\" : \"@{utcNow()}\"\n}",
+						"value": "{\n    \"Status\": \"Success\",\n    \"PipeLineName\" : \"@{pipeline().Pipeline}\",\n    \"StartTime\" : \"@{pipeline().TriggerTime}\",\n    \"EndTime\" : \"@{utcNow()}\"\n}",
 						"type": "Expression"
 					}
 				}
