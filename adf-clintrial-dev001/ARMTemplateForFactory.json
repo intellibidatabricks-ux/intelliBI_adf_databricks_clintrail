@@ -41,6 +41,670 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_bronze_silver_data_load')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup_bronze_silver_control_tab",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "@concat('SELECT * FROM [', pipeline().parameters.pPlSchemaName,\n        '].[', pipeline().parameters.pPlTableName,\n        '] WHERE Enabled = ''True''')",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "ds_sqlserver_source_tables_param",
+								"type": "DatasetReference",
+								"parameters": {
+									"pDsServerName": {
+										"value": "@pipeline().parameters.pPlServerName",
+										"type": "Expression"
+									},
+									"pDsDatabasename": {
+										"value": "@pipeline().parameters.pPlDatabaseName",
+										"type": "Expression"
+									},
+									"pDsSchemaName": {
+										"value": "@pipeline().parameters.pPlSchemaName",
+										"type": "Expression"
+									},
+									"pDsTableName": {
+										"value": "@pipeline().parameters.pPlTableName",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach_Domain_Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup_bronze_silver_control_tab",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup_bronze_silver_control_tab').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Notebook_Domain",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Users/intellibidatabricks01@gmail.com/intelliBI_databricks_clintrail/bronze_silver_load/nb_bronze_silver_load",
+										"baseParameters": {
+											"domain": {
+												"value": "@item().Domain",
+												"type": "Expression"
+											},
+											"srcCatalog": {
+												"value": "@item().SrcCatalog",
+												"type": "Expression"
+											},
+											"srcSchema": {
+												"value": "@item().SrcSchema",
+												"type": "Expression"
+											},
+											"srcTableName": {
+												"value": "@item().SrcTableName",
+												"type": "Expression"
+											},
+											"tgtCatalog": {
+												"value": "@item().TgtCatalog",
+												"type": "Expression"
+											},
+											"tgtSchema": {
+												"value": "@item().TgtSchema",
+												"type": "Expression"
+											},
+											"tgtTableName": {
+												"value": "@item().TgtTableName",
+												"type": "Expression"
+											},
+											"businessKey": {
+												"value": "@item().BusinessKey",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_azure_databricks",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pPlServerName": {
+						"type": "string",
+						"defaultValue": "localhost\\SQLEXPRESS"
+					},
+					"pPlDatabaseName": {
+						"type": "string",
+						"defaultValue": "dev_clintrail_edc_src"
+					},
+					"pPlSchemaName": {
+						"type": "string",
+						"defaultValue": "edcsrcmetadata"
+					},
+					"pPlTableName": {
+						"type": "string",
+						"defaultValue": "srcEdcBronzeToSilverControl"
+					}
+				},
+				"folder": {
+					"name": "dev_clintrail/bronze_silver_load"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_sqlserver_source_tables_param')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_azure_databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_clintrail_master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute_Pipeline_Source_Landing",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_sqlserver_src_adls_landing",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute_Pipeline_Landing_Bronze",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute_Pipeline_Source_Landing",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_landing_bronze_data_load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute_Pipeline_Bronze_Silver",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute_Pipeline_Landing_Bronze",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_bronze_silver_data_load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute_Pipeline_Silver_Gold_Dim",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute_Pipeline_Bronze_Silver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_silver_gold_dim_data_load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute_Pipeline_Silver_Gold_Fact",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute_Pipeline_Silver_Gold_Dim",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_silver_gold_fact_data_load",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "dev_clintrail/clintrail_master"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_sqlserver_src_adls_landing')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_landing_bronze_data_load')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_bronze_silver_data_load')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_silver_gold_dim_data_load')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_silver_gold_fact_data_load')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_clintrail_master_orchestration')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute_Pipeline_Clintrail_Master",
+						"type": "ExecutePipeline",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_clintrail_master",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Web_Failed",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline_copy_data",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-12.centralindia.logic.azure.com:443/workflows/505daf2d56ae44a2b994ce0f33e0f440/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=81hh1qYk0w1bh_-6cJB2jacbAbll6z3sVHHrpR0EDUg",
+							"body": {
+								"value": "{\n    \"Status\": \"Failed\",\n    \"PipeLineName\": \"@{pipeline().Pipeline}\",\n    \"ErrorMsg\": \"@{activity('Execute Pipeline_copy_data').Error?.Message}\"\n}\n",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Web_Success",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline_copy_data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-12.centralindia.logic.azure.com:443/workflows/505daf2d56ae44a2b994ce0f33e0f440/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=81hh1qYk0w1bh_-6cJB2jacbAbll6z3sVHHrpR0EDUg",
+							"body": {
+								"value": "{\n    \"Status\": \"Success\",\n    \"PipeLineName\" : \"@{pipeline().Pipeline}\",\n    \"StartTime\" : \"@{pipeline().TriggerTime}\",\n    \"EndTime\" : \"@{utcNow()}\"\n}",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Execute Pipeline_copy_data",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_copy_master",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "dev_clintrail/clintrail_master"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_clintrail_master')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_copy_master')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_copy_activity_1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "SqlServerSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate"
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_sqlserver_source_tables_param",
+								"type": "DatasetReference",
+								"parameters": {
+									"pDsServerName": "localhost\\SQLEXPRESS",
+									"pDsDatabasename": "dev_clintrail_edc_src",
+									"pDsSchemaName": "src",
+									"pDsTableName": "DS"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sqlserver_source_tables_param",
+								"type": "DatasetReference",
+								"parameters": {
+									"pDsServerName": "localhost\\SQLEXPRESS",
+									"pDsDatabasename": "dev_healthConnect_raw",
+									"pDsSchemaName": "dbo",
+									"pDsTableName": "email_test"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "dev_clintrail/clintrail_master"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_sqlserver_source_tables_param')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_copy_activity_2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "SqlServerSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate"
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_sqlserver_source_tables_param",
+								"type": "DatasetReference",
+								"parameters": {
+									"pDsServerName": "localhost\\SQLEXPRESS",
+									"pDsDatabasename": "dev_clintrail_edc_src",
+									"pDsSchemaName": "src",
+									"pDsTableName": "DSGHGJGJGJHGJHGJHGJH"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sqlserver_source_tables_param",
+								"type": "DatasetReference",
+								"parameters": {
+									"pDsServerName": "localhost\\SQLEXPRESS",
+									"pDsDatabasename": "dev_healthConnect_raw",
+									"pDsSchemaName": "dbo",
+									"pDsTableName": "email_test"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "dev_clintrail/clintrail_master"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_sqlserver_source_tables_param')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_copy_master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_copy_activity_1",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute Pipeline2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_copy_activity_2",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "dev_clintrail/clintrail_master"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_copy_activity_1')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_copy_activity_2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_copy_master_orchestration')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_copy_master",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "dev_clintrail/clintrail_master"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_copy_master')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_landing_bronze_data_load')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -151,6 +815,332 @@
 				},
 				"folder": {
 					"name": "dev_clintrail/landing_bronze_load"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_sqlserver_source_tables_param')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_azure_databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_silver_gold_dim_data_load')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup_silver_gold",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "@concat('SELECT * FROM [', pipeline().parameters.pPlSchemaName,\n        '].[', pipeline().parameters.pPlTableName,\n        '] WHERE entityType = ''dimension''')",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "ds_sqlserver_source_tables_param",
+								"type": "DatasetReference",
+								"parameters": {
+									"pDsServerName": {
+										"value": "@pipeline().parameters.pPlServername",
+										"type": "Expression"
+									},
+									"pDsDatabasename": {
+										"value": "@pipeline().parameters.pPlDatabaseName",
+										"type": "Expression"
+									},
+									"pDsSchemaName": {
+										"value": "@pipeline().parameters.pPlSchemaName",
+										"type": "Expression"
+									},
+									"pDsTableName": {
+										"value": "@pipeline().parameters.pPlTableName",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach_silver_gold",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup_silver_gold",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup_silver_gold').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Notebook_silver_gold_dim",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 3,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Users/intellibidatabricks01@gmail.com/intelliBI_databricks_clintrail/silver_gold_load/nb_gold_dimensions",
+										"baseParameters": {
+											"srcCatalog": {
+												"value": "@item().SrcCatalog",
+												"type": "Expression"
+											},
+											"srcSchema": {
+												"value": "@item().SrcSchema",
+												"type": "Expression"
+											},
+											"srcTableName": {
+												"value": "@item().SrcTableName",
+												"type": "Expression"
+											},
+											"tgtCatalog": {
+												"value": "@item().TgtCatalog",
+												"type": "Expression"
+											},
+											"tgtSchema": {
+												"value": "@item().TgtSchema",
+												"type": "Expression"
+											},
+											"tgtTableName": {
+												"value": "@item().TgtTableName",
+												"type": "Expression"
+											},
+											"scdType": {
+												"value": "@item().ScdType",
+												"type": "Expression"
+											},
+											"businessKey": {
+												"value": "@item().BusinessKey",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_azure_databricks",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pPlServername": {
+						"type": "string",
+						"defaultValue": "localhost\\SQLEXPRESS"
+					},
+					"pPlDatabaseName": {
+						"type": "string",
+						"defaultValue": "dev_clintrail_edc_src"
+					},
+					"pPlSchemaName": {
+						"type": "string",
+						"defaultValue": "edcsrcmetadata"
+					},
+					"pPlTableName": {
+						"type": "string",
+						"defaultValue": "srcEdcSilverToGoldControl"
+					}
+				},
+				"folder": {
+					"name": "dev_clintrail/silver_gold_dim_load"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_sqlserver_source_tables_param')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_azure_databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_silver_gold_fact_data_load')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup_silver_gold",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "@concat('SELECT * FROM [', pipeline().parameters.pPlSchemaName,\n        '].[', pipeline().parameters.pPlTableName,\n        '] WHERE entityType = ''fact''')",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "ds_sqlserver_source_tables_param",
+								"type": "DatasetReference",
+								"parameters": {
+									"pDsServerName": {
+										"value": "@pipeline().parameters.pPlServername",
+										"type": "Expression"
+									},
+									"pDsDatabasename": {
+										"value": "@pipeline().parameters.pPlDatabaseName",
+										"type": "Expression"
+									},
+									"pDsSchemaName": {
+										"value": "@pipeline().parameters.pPlSchemaName",
+										"type": "Expression"
+									},
+									"pDsTableName": {
+										"value": "@pipeline().parameters.pPlTableName",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach_silver_gold",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup_silver_gold",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup_silver_gold').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Notebook_silver_gold_fact",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 3,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Users/intellibidatabricks01@gmail.com/intelliBI_databricks_clintrail/silver_gold_load/nb_gold_facts",
+										"baseParameters": {
+											"entityName": {
+												"value": "@item().EntityName",
+												"type": "Expression"
+											},
+											"srcCatalog": {
+												"value": "@item().SrcCatalog",
+												"type": "Expression"
+											},
+											"srcSchema": {
+												"value": "@item().SrcSchema",
+												"type": "Expression"
+											},
+											"srcTableName": {
+												"value": "@item().SrcTableName",
+												"type": "Expression"
+											},
+											"tgtCatalog": {
+												"value": "@item().TgtCatalog",
+												"type": "Expression"
+											},
+											"tgtSchema": {
+												"value": "@item().TgtSchema",
+												"type": "Expression"
+											},
+											"tgtTableName": {
+												"value": "@item().TgtTableName",
+												"type": "Expression"
+											},
+											"businessKey": {
+												"value": "@item().BusinessKey",
+												"type": "Expression"
+											},
+											"eventDateCol": {
+												"value": "@item().EventDateCol",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_azure_databricks",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pPlServername": {
+						"type": "string",
+						"defaultValue": "localhost\\SQLEXPRESS"
+					},
+					"pPlDatabaseName": {
+						"type": "string",
+						"defaultValue": "dev_clintrail_edc_src"
+					},
+					"pPlSchemaName": {
+						"type": "string",
+						"defaultValue": "edcsrcmetadata"
+					},
+					"pPlTableName": {
+						"type": "string",
+						"defaultValue": "srcEdcSilverToGoldControl"
+					}
+				},
+				"folder": {
+					"name": "dev_clintrail/silver_gold_dim_load"
 				},
 				"annotations": []
 			},
@@ -377,7 +1367,7 @@
 									],
 									"policy": {
 										"timeout": "0.12:00:00",
-										"retry": 3,
+										"retry": 0,
 										"retryIntervalInSeconds": 30,
 										"secureOutput": false,
 										"secureInput": false
@@ -407,7 +1397,7 @@
 										"type": "LinkedServiceReference",
 										"parameters": {
 											"pLsServerName": {
-												"value": "@item().SrcServerName",
+												"value": "@item().SrcServerNamee",
 												"type": "Expression"
 											},
 											"pLsDatabasename": {
@@ -643,6 +1633,37 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/shir-local-computer')]",
 				"[concat(variables('factoryId'), '/linkedServices/ls_azure_key_vault_secrets')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tr_everday_10am')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_clintrail_master_orchestration",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 5,
+						"startTime": "2026-07-13T04:30:00",
+						"endTime": "2026-07-15T08:44:00",
+						"timeZone": "India Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_clintrail_master_orchestration')]"
 			]
 		},
 		{
