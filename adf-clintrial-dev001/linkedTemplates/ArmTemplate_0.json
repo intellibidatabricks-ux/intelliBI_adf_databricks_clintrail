@@ -1659,6 +1659,13 @@
 							"type": "PipelineReference"
 						},
 						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "pl_copy_master_orchestration",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -1666,14 +1673,15 @@
 					"recurrence": {
 						"frequency": "Minute",
 						"interval": 5,
-						"startTime": "2026-07-13T04:30:00",
-						"endTime": "2026-07-15T08:44:00",
+						"startTime": "2026-07-13T04:35:00",
+						"endTime": "2026-07-14T17:00:00",
 						"timeZone": "India Standard Time"
 					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_clintrail_master_orchestration')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_clintrail_master_orchestration')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_copy_master_orchestration')]"
 			]
 		}
 	]
