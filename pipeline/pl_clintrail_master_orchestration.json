@@ -1,0 +1,9 @@
+{
+	"name": "pl_clintrail_master_orchestration",
+	"properties": {
+		"folder": {
+			"name": "dev_clintrail/clintrail_master"
+		},
+		"annotations": []
+	}
+}
