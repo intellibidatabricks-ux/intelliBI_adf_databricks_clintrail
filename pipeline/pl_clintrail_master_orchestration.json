@@ -1,0 +1,101 @@
+{
+	"name": "pl_clintrail_master_orchestration",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute_Pipeline_Clintrail_Master",
+				"type": "ExecutePipeline",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_clintrail_master",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Web_Failed",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline_copy_data",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": "https://prod-12.centralindia.logic.azure.com:443/workflows/505daf2d56ae44a2b994ce0f33e0f440/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=81hh1qYk0w1bh_-6cJB2jacbAbll6z3sVHHrpR0EDUg",
+					"body": {
+						"value": "{\n    \"Status\": \"Failed\",\n    \"PipeLineName\": \"@{pipeline().Pipeline}\",\n    \"ErrorMsg\": \"@{activity('Execute Pipeline_copy_data').Error?.Message}\"\n}\n",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Web_Success",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline_copy_data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": "https://prod-12.centralindia.logic.azure.com:443/workflows/505daf2d56ae44a2b994ce0f33e0f440/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=81hh1qYk0w1bh_-6cJB2jacbAbll6z3sVHHrpR0EDUg",
+					"body": {
+						"value": "{\n    \"Status\": \"Success\",\n    \"PipeLineName\" : \"@{pipeline().Pipeline}\",\n    \"StartTime\" : \"@{pipeline().TriggerTime}\",\n    \"EndTime\" : \"@{utcNow()}\"\n}",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Execute Pipeline_copy_data",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_copy_master",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "dev_clintrail/clintrail_master"
+		},
+		"annotations": []
+	}
+}
