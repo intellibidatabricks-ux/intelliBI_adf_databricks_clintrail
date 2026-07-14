@@ -44,7 +44,7 @@
 							"pDsServerName": "localhost\\SQLEXPRESS",
 							"pDsDatabasename": "dev_clintrail_edc_src",
 							"pDsSchemaName": "src",
-							"pDsTableName": "dm"
+							"pDsTableName": "dmdjd"
 						}
 					}
 				],
