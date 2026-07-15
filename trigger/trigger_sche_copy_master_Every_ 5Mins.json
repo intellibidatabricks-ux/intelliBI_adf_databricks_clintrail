@@ -1,0 +1,25 @@
+{
+	"name": "trigger_sche_copy_master_Every_ 5Mins",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_clintrail_master_orchestration",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 5,
+				"startTime": "2026-07-14T08:00:00",
+				"endTime": "2026-07-15T08:30:00",
+				"timeZone": "India Standard Time"
+			}
+		}
+	}
+}
