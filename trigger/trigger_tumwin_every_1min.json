@@ -1,0 +1,17 @@
+{
+	"name": "trigger_tumwin_every_1min",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 1,
+				"startTime": "2026-07-14T08:58:00",
+				"timeZone": "India Standard Time"
+			}
+		}
+	}
+}
