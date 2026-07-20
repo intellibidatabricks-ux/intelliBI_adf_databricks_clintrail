@@ -2,7 +2,7 @@
 	"name": "trigger_tumwin_copy_every_1Mins",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipeline": {
 			"pipelineReference": {
 				"referenceName": "pl_clintrail_master_orchestration",
